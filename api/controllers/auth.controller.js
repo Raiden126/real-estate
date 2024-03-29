@@ -5,7 +5,9 @@ import jwt from 'jsonwebtoken'
 
 export const signup = async (req, res, next) => {
     const {username, email, password} = req.body;
-    const hashedPassword = bcryptjs.hashSync(password, 10);
+    const saltRounds = 10;
+    const salt = bcryptjs.genSaltSync(saltRounds);
+    const hashedPassword = bcryptjs.hashSync(password, salt);
     const newUser = new User({username, email, password: hashedPassword});
     try{
         await newUser.save();
@@ -46,6 +48,15 @@ export const google = async (req, res, next) => {
             const {password: pass, ...rest} = newUser._doc;
             res.cookie('access_token', token, {httpOnly: true}).status(200).json(rest);
         }
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const signout = (req, res, next) => {
+    try {
+        res.clearCookie('access_token');
+        res.status(200).json('User has been logged out!');        
     } catch (error) {
         next(error)
     }
